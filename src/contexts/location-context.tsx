@@ -81,20 +81,36 @@ export function LocationProvider({ children }: { children: ReactNode }) {
 
       const { latitude, longitude } = position.coords;
 
-      // Buscar nome da cidade via reverse geocoding
+      // Buscar nome da cidade via reverse geocoding (Nominatim/OpenStreetMap)
       const response = await fetch(
-        `https://geocoding-api.open-meteo.com/v1/reverse?latitude=${latitude}&longitude=${longitude}&language=pt`
+        `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&accept-language=pt`,
+        {
+          headers: {
+            "User-Agent": "DClima Weather Dashboard",
+          },
+        }
       );
 
       let cityName = "Sua Localizacao";
+      let country = "Detectado";
 
       if (response.ok) {
         const data = await response.json();
-        if (data.results && data.results[0]) {
-          const result = data.results[0];
-          cityName = result.admin1
-            ? `${result.name}, ${result.admin1}`
-            : result.name;
+        if (data.address) {
+          const addr = data.address;
+          // Tentar pegar cidade, ou municipio, ou estado
+          const city = addr.city || addr.town || addr.village || addr.municipality || addr.county;
+          const state = addr.state;
+
+          if (city && state) {
+            cityName = `${city}, ${state}`;
+          } else if (city) {
+            cityName = city;
+          } else if (state) {
+            cityName = state;
+          }
+
+          country = addr.country || "Detectado";
         }
       }
 
@@ -103,7 +119,7 @@ export function LocationProvider({ children }: { children: ReactNode }) {
         name: cityName,
         latitude,
         longitude,
-        country: "Detectado",
+        country,
       };
 
       setLocation(detectedLocation);
