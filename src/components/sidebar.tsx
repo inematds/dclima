@@ -15,7 +15,7 @@ import { Separator } from "@/components/ui/separator";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
-  { name: "Previsao 7 Dias", href: "/forecast", icon: Calendar },
+  { name: "Previsao 15 Dias", href: "/forecast", icon: Calendar },
   { name: "Historico", href: "/history", icon: History },
   { name: "Mapa", href: "/map", icon: Map },
 ];

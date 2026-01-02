@@ -131,16 +131,16 @@ export default function ForecastPage() {
     <div className="p-6 space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold">Previsao 7 Dias</h1>
+        <h1 className="text-2xl font-bold">Previsao 15 Dias</h1>
         <p className="text-sm text-muted-foreground">
           Previsao detalhada para {location.name}
         </p>
       </div>
 
       {/* Cards de dias */}
-      <div className="grid gap-4 grid-cols-2 md:grid-cols-4 lg:grid-cols-7">
+      <div className="grid gap-4 grid-cols-2 md:grid-cols-5 lg:grid-cols-7 xl:grid-cols-8">
         {isLoading
-          ? Array.from({ length: 7 }).map((_, i) => (
+          ? Array.from({ length: 15 }).map((_, i) => (
               <DayCard
                 key={i}
                 date=""

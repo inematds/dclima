@@ -64,7 +64,7 @@ export async function getWeatherData(
       "weather_code",
     ].join(","),
     timezone: "America/Sao_Paulo",
-    forecast_days: "7",
+    forecast_days: "15",
   });
 
   const response = await fetch(`${BASE_URL}/forecast?${params}`);
