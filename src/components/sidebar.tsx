@@ -5,7 +5,9 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
-  MapPin,
+  Calendar,
+  History,
+  Map,
   Settings,
   CloudSun,
 } from "lucide-react";
@@ -13,7 +15,9 @@ import { Separator } from "@/components/ui/separator";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
-  { name: "Localizacoes", href: "/locations", icon: MapPin },
+  { name: "Previsao 7 Dias", href: "/forecast", icon: Calendar },
+  { name: "Historico", href: "/history", icon: History },
+  { name: "Mapa", href: "/map", icon: Map },
 ];
 
 const bottomNav = [

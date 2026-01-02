@@ -1,0 +1,146 @@
+"use client";
+
+import { useEffect, useRef } from "react";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+
+// Fix para icones do Leaflet
+import icon from "leaflet/dist/images/marker-icon.png";
+import iconShadow from "leaflet/dist/images/marker-shadow.png";
+import iconRetina from "leaflet/dist/images/marker-icon-2x.png";
+
+const DefaultIcon = L.icon({
+  iconUrl: icon.src,
+  iconRetinaUrl: iconRetina.src,
+  shadowUrl: iconShadow.src,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  tooltipAnchor: [16, -28],
+  shadowSize: [41, 41],
+});
+
+L.Marker.prototype.options.icon = DefaultIcon;
+
+interface WeatherMapProps {
+  center: [number, number];
+  zoom?: number;
+  owmLayer?: string;
+  radarPath?: string | null;
+  radarHost?: string;
+}
+
+const OWM_API_KEY = process.env.NEXT_PUBLIC_OWM_API_KEY;
+
+export default function WeatherMap({
+  center,
+  zoom = 8,
+  owmLayer = "precipitation_new",
+  radarPath,
+  radarHost,
+}: WeatherMapProps) {
+  const mapRef = useRef<L.Map | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const owmLayerRef = useRef<L.TileLayer | null>(null);
+  const radarLayerRef = useRef<L.TileLayer | null>(null);
+  const markerRef = useRef<L.Marker | null>(null);
+
+  // Inicializar mapa
+  useEffect(() => {
+    if (!containerRef.current || mapRef.current) return;
+
+    // Criar mapa
+    const map = L.map(containerRef.current, {
+      center: center,
+      zoom: zoom,
+      zoomControl: true,
+      attributionControl: true,
+    });
+
+    // Camada base (OpenStreetMap)
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      maxZoom: 19,
+    }).addTo(map);
+
+    // Marcador de localizacao
+    const marker = L.marker(center).addTo(map);
+    marker.bindPopup("Sua localizacao").openPopup();
+    markerRef.current = marker;
+
+    mapRef.current = map;
+
+    return () => {
+      map.remove();
+      mapRef.current = null;
+    };
+  }, []);
+
+  // Atualizar centro do mapa
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    mapRef.current.setView(center, mapRef.current.getZoom());
+
+    if (markerRef.current) {
+      markerRef.current.setLatLng(center);
+    }
+  }, [center]);
+
+  // Atualizar camada OWM
+  useEffect(() => {
+    if (!mapRef.current || !OWM_API_KEY) return;
+
+    // Remover camada anterior
+    if (owmLayerRef.current) {
+      mapRef.current.removeLayer(owmLayerRef.current);
+    }
+
+    // Adicionar nova camada
+    const layer = L.tileLayer(
+      `https://tile.openweathermap.org/map/${owmLayer}/{z}/{x}/{y}.png?appid=${OWM_API_KEY}`,
+      {
+        attribution: '&copy; <a href="https://openweathermap.org">OpenWeatherMap</a>',
+        opacity: 0.6,
+        maxZoom: 19,
+      }
+    );
+
+    layer.addTo(mapRef.current);
+    owmLayerRef.current = layer;
+  }, [owmLayer]);
+
+  // Atualizar camada de radar
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    // Remover camada anterior
+    if (radarLayerRef.current) {
+      mapRef.current.removeLayer(radarLayerRef.current);
+      radarLayerRef.current = null;
+    }
+
+    // Adicionar nova camada se disponivel
+    if (radarPath && radarHost) {
+      const layer = L.tileLayer(
+        `${radarHost}${radarPath}/256/{z}/{x}/{y}/2/1_1.png`,
+        {
+          attribution: '&copy; <a href="https://www.rainviewer.com">RainViewer</a>',
+          opacity: 0.7,
+          maxZoom: 19,
+        }
+      );
+
+      layer.addTo(mapRef.current);
+      radarLayerRef.current = layer;
+    }
+  }, [radarPath, radarHost]);
+
+  return (
+    <div
+      ref={containerRef}
+      className="h-[500px] w-full"
+      style={{ zIndex: 0 }}
+    />
+  );
+}
