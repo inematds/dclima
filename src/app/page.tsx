@@ -1,14 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useLocation } from "@/contexts/location-context";
 import { useWeather } from "@/hooks/use-weather";
-import { DEFAULT_LOCATION } from "@/lib/open-meteo";
-import type { Location } from "@/types/weather";
 import {
   KpiCards,
   TemperatureChart,
   ForecastTable,
-  LocationSearch,
 } from "@/components/dashboard";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, AlertCircle } from "lucide-react";
@@ -16,7 +13,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 export default function DashboardPage() {
-  const [location, setLocation] = useState<Location>(DEFAULT_LOCATION);
+  const { location } = useLocation();
   const { data, isLoading, isError, error, refetch, dataUpdatedAt } =
     useWeather(location);
 
@@ -47,10 +44,6 @@ export default function DashboardPage() {
             <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
             Atualizar
           </Button>
-          <LocationSearch
-            currentLocation={location}
-            onLocationChange={setLocation}
-          />
         </div>
       </div>
 

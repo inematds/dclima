@@ -13,9 +13,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { MapPin, Layers, RefreshCw, Play, Pause } from "lucide-react";
+import { Layers, RefreshCw, Play, Pause, Maximize2, Minimize2 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useState, useEffect, useCallback } from "react";
+
+const MAP_SIZES = {
+  normal: "h-[400px]",
+  grande: "h-[600px]",
+  enorme: "h-[800px]",
+  tela_cheia: "fixed inset-0 z-50 h-screen",
+} as const;
 
 // Importar o mapa dinamicamente para evitar SSR issues
 const WeatherMap = dynamic(() => import("@/components/weather-map"), {
@@ -29,6 +36,7 @@ const OWM_LAYERS = [
   { id: "clouds_new", name: "Nuvens", color: "text-gray-500" },
   { id: "wind_new", name: "Vento", color: "text-green-500" },
   { id: "pressure_new", name: "Pressao", color: "text-purple-500" },
+  { id: "none", name: "Nenhuma", color: "text-muted-foreground" },
 ] as const;
 
 export default function MapPage() {
@@ -39,6 +47,9 @@ export default function MapPage() {
   const [showRadar, setShowRadar] = useState(true);
   const [radarFrame, setRadarFrame] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [mapSize, setMapSize] = useState<keyof typeof MAP_SIZES>("normal");
+
+  const isFullscreen = mapSize === "tela_cheia";
 
   // Animacao do radar
   useEffect(() => {
@@ -95,9 +106,8 @@ export default function MapPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">Mapa Meteorologico</h1>
-          <p className="text-sm text-muted-foreground flex items-center gap-1">
-            <MapPin className="h-4 w-4" />
-            {location.name}
+          <p className="text-sm text-muted-foreground">
+            Visualizacao de camadas e radar
           </p>
         </div>
 
@@ -126,6 +136,31 @@ export default function MapPage() {
             Radar
           </Button>
 
+          {/* Tamanho do mapa */}
+          <Select value={mapSize} onValueChange={(v) => setMapSize(v as keyof typeof MAP_SIZES)}>
+            <SelectTrigger className="w-[130px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="normal">Normal</SelectItem>
+              <SelectItem value="grande">Grande</SelectItem>
+              <SelectItem value="enorme">Enorme</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Tela cheia */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setMapSize(isFullscreen ? "normal" : "tela_cheia")}
+          >
+            {isFullscreen ? (
+              <Minimize2 className="h-4 w-4" />
+            ) : (
+              <Maximize2 className="h-4 w-4" />
+            )}
+          </Button>
+
           {/* Atualizar */}
           <Button
             variant="outline"
@@ -139,17 +174,32 @@ export default function MapPage() {
       </div>
 
       {/* Mapa */}
-      <Card>
-        <CardContent className="p-0 overflow-hidden rounded-lg">
-          <WeatherMap
-            center={[location.latitude, location.longitude]}
-            zoom={8}
-            owmLayer={selectedLayer}
-            radarPath={showRadar ? radarPath : null}
-            radarHost={rainData?.host}
-          />
-        </CardContent>
-      </Card>
+      <div className={isFullscreen ? MAP_SIZES.tela_cheia : ""}>
+        {isFullscreen && (
+          <div className="absolute top-4 right-4 z-[1000] flex gap-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setMapSize("normal")}
+            >
+              <Minimize2 className="h-4 w-4 mr-2" />
+              Sair da tela cheia
+            </Button>
+          </div>
+        )}
+        <Card className={isFullscreen ? "h-full rounded-none" : ""}>
+          <CardContent className={`p-0 overflow-hidden ${isFullscreen ? "h-full" : "rounded-lg"}`}>
+            <WeatherMap
+              center={[location.latitude, location.longitude]}
+              zoom={8}
+              owmLayer={selectedLayer}
+              radarPath={showRadar ? radarPath : null}
+              radarHost={rainData?.host}
+              height={isFullscreen ? "100%" : MAP_SIZES[mapSize].replace("h-[", "").replace("]", "")}
+            />
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Controles do Radar */}
       {showRadar && rainData?.radar && (

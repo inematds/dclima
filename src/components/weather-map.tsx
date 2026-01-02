@@ -24,6 +24,7 @@ interface WeatherMapProps {
   owmLayer?: string;
   radarPath?: string | null;
   radarHost?: string;
+  height?: string;
 }
 
 const OWM_API_KEY = process.env.NEXT_PUBLIC_OWM_API_KEY;
@@ -34,6 +35,7 @@ export default function WeatherMap({
   owmLayer = "precipitation_new",
   radarPath,
   radarHost,
+  height = "500px",
 }: WeatherMapProps) {
   const mapRef = useRef<L.Map | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -85,12 +87,16 @@ export default function WeatherMap({
 
   // Atualizar camada OWM
   useEffect(() => {
-    if (!mapRef.current || !OWM_API_KEY) return;
+    if (!mapRef.current) return;
 
     // Remover camada anterior
     if (owmLayerRef.current) {
       mapRef.current.removeLayer(owmLayerRef.current);
+      owmLayerRef.current = null;
     }
+
+    // Nao adicionar camada se for "none" ou se nao tiver API key
+    if (owmLayer === "none" || !OWM_API_KEY) return;
 
     // Adicionar nova camada
     const layer = L.tileLayer(
@@ -132,11 +138,17 @@ export default function WeatherMap({
     }
   }, [radarPath, radarHost]);
 
+  // Atualizar tamanho quando height mudar
+  useEffect(() => {
+    if (!mapRef.current) return;
+    mapRef.current.invalidateSize();
+  }, [height]);
+
   return (
     <div
       ref={containerRef}
-      className="h-[500px] w-full"
-      style={{ zIndex: 0 }}
+      className="w-full"
+      style={{ height, zIndex: 0 }}
     />
   );
 }

@@ -61,7 +61,7 @@ export default function HistoryPage() {
       <div>
         <h1 className="text-2xl font-bold">Historico</h1>
         <p className="text-sm text-muted-foreground">
-          Ultimos 7 dias em {location.name}
+          Dados dos ultimos 7 dias
         </p>
       </div>
 

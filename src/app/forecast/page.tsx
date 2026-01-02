@@ -133,7 +133,7 @@ export default function ForecastPage() {
       <div>
         <h1 className="text-2xl font-bold">Previsao 15 Dias</h1>
         <p className="text-sm text-muted-foreground">
-          Previsao detalhada para {location.name}
+          Previsao detalhada do tempo
         </p>
       </div>
 
