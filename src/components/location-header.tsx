@@ -12,6 +12,7 @@ import { searchLocations } from "@/lib/open-meteo";
 import type { Location } from "@/types/weather";
 import { MapPin, Search, Loader2, Navigation } from "lucide-react";
 import { useState, useCallback } from "react";
+import { MobileMenu } from "@/components/sidebar";
 
 export function LocationHeader() {
   const { location, setLocation, detectLocation, isDetecting } = useLocation();
@@ -43,23 +44,27 @@ export function LocationHeader() {
   };
 
   return (
-    <div className="flex items-center gap-4 p-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <MapPin className="h-8 w-8 text-primary flex-shrink-0" />
+    <div className="flex items-center gap-2 sm:gap-4 p-3 sm:p-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      {/* Menu hamburger - apenas mobile */}
+      <MobileMenu />
+
+      <MapPin className="h-6 w-6 sm:h-8 sm:w-8 text-primary flex-shrink-0" />
 
       <div className="flex-1 min-w-0">
-        <h2 className="text-2xl md:text-3xl font-bold truncate">
+        <h2 className="text-lg sm:text-2xl md:text-3xl font-bold truncate">
           {location.name}
         </h2>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">
           {location.latitude.toFixed(2)}°, {location.longitude.toFixed(2)}°
           {location.country && ` • ${location.country}`}
         </p>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1 sm:gap-2">
         <Button
           variant="outline"
           size="icon"
+          className="h-8 w-8 sm:h-9 sm:w-9"
           onClick={() => detectLocation()}
           disabled={isDetecting}
           title="Detectar localizacao"
@@ -69,9 +74,9 @@ export function LocationHeader() {
 
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
-            <Button variant="outline" className="gap-2">
+            <Button variant="outline" size="icon" className="sm:w-auto sm:px-3 h-8 w-8 sm:h-9">
               <Search className="h-4 w-4" />
-              <span className="hidden sm:inline">Buscar cidade</span>
+              <span className="hidden sm:inline sm:ml-2">Buscar</span>
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-80 p-4" align="end">

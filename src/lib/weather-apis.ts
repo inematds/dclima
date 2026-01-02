@@ -158,7 +158,7 @@ export interface EnsembleModelData {
   };
 }
 
-// Open-Meteo Ensemble API - Comparacao de modelos
+// Open-Meteo Ensemble API - Comparacao de modelos (apenas previsao futura)
 export async function getEnsembleComparison(
   latitude: number,
   longitude: number
@@ -202,6 +202,51 @@ export async function getEnsembleComparison(
   return results;
 }
 
+// Open-Meteo Ensemble API - Com dados passados para acertividade
+export async function getEnsembleWithPast(
+  latitude: number,
+  longitude: number
+): Promise<EnsembleModelData[]> {
+  const results: EnsembleModelData[] = [];
+
+  for (const model of ENSEMBLE_MODELS) {
+    try {
+      const params = new URLSearchParams({
+        latitude: String(latitude),
+        longitude: String(longitude),
+        daily: ["precipitation_sum", "temperature_2m_max", "temperature_2m_min"].join(","),
+        timezone: "America/Sao_Paulo",
+        forecast_days: "16",
+        past_days: "14", // Ultimos 14 dias para comparar com observado
+      });
+
+      const response = await fetch(
+        `https://api.open-meteo.com/v1/forecast?${params}&models=${model.id}`
+      );
+
+      if (!response.ok) continue;
+
+      const data = await response.json();
+
+      results.push({
+        model: model.id,
+        modelName: model.name,
+        color: model.color,
+        daily: {
+          time: data.daily.time,
+          precipitation_sum: data.daily.precipitation_sum,
+          temperature_2m_max: data.daily.temperature_2m_max,
+          temperature_2m_min: data.daily.temperature_2m_min,
+        },
+      });
+    } catch (error) {
+      console.error(`Erro ao buscar modelo ${model.name}:`, error);
+    }
+  }
+
+  return results;
+}
+
 // Obter datas para historico (ultimos N dias)
 export function getHistoricalDateRange(days: number = 7) {
   const end = new Date();
@@ -214,4 +259,49 @@ export function getHistoricalDateRange(days: number = 7) {
     startDate: formatDateForAPI(start),
     endDate: formatDateForAPI(end),
   };
+}
+
+// Dados observados (reais) para verificacao de modelos
+export interface ObservedData {
+  time: string[];
+  precipitation_sum: number[];
+  temperature_2m_max: number[];
+  temperature_2m_min: number[];
+}
+
+export async function getObservedData(
+  latitude: number,
+  longitude: number,
+  days: number = 7
+): Promise<ObservedData | null> {
+  try {
+    const { startDate, endDate } = getHistoricalDateRange(days);
+
+    const params = new URLSearchParams({
+      latitude: String(latitude),
+      longitude: String(longitude),
+      start_date: startDate,
+      end_date: endDate,
+      daily: ["precipitation_sum", "temperature_2m_max", "temperature_2m_min"].join(","),
+      timezone: "America/Sao_Paulo",
+    });
+
+    const response = await fetch(
+      `https://archive-api.open-meteo.com/v1/archive?${params}`
+    );
+
+    if (!response.ok) return null;
+
+    const data = await response.json();
+
+    return {
+      time: data.daily.time,
+      precipitation_sum: data.daily.precipitation_sum,
+      temperature_2m_max: data.daily.temperature_2m_max,
+      temperature_2m_min: data.daily.temperature_2m_min,
+    };
+  } catch (error) {
+    console.error("Erro ao buscar dados observados:", error);
+    return null;
+  }
 }
