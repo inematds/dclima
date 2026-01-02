@@ -137,6 +137,71 @@ export function formatDateForAPI(date: Date): string {
   return date.toISOString().split("T")[0];
 }
 
+// Modelos disponiveis no Open-Meteo Ensemble
+export const ENSEMBLE_MODELS = [
+  { id: "ecmwf_ifs025", name: "ECMWF IFS", color: "#3b82f6", description: "Europeu - Alta precisao" },
+  { id: "gfs_seamless", name: "GFS", color: "#ef4444", description: "Americano - Longo prazo" },
+  { id: "icon_seamless", name: "ICON", color: "#22c55e", description: "Alemao - Alta resolucao" },
+  { id: "gem_global", name: "GEM", color: "#f59e0b", description: "Canadense" },
+  { id: "jma_seamless", name: "JMA", color: "#8b5cf6", description: "Japones" },
+] as const;
+
+export interface EnsembleModelData {
+  model: string;
+  modelName: string;
+  color: string;
+  daily: {
+    time: string[];
+    precipitation_sum: number[];
+    temperature_2m_max: number[];
+    temperature_2m_min: number[];
+  };
+}
+
+// Open-Meteo Ensemble API - Comparacao de modelos
+export async function getEnsembleComparison(
+  latitude: number,
+  longitude: number
+): Promise<EnsembleModelData[]> {
+  const results: EnsembleModelData[] = [];
+
+  for (const model of ENSEMBLE_MODELS) {
+    try {
+      const params = new URLSearchParams({
+        latitude: String(latitude),
+        longitude: String(longitude),
+        daily: ["precipitation_sum", "temperature_2m_max", "temperature_2m_min"].join(","),
+        timezone: "America/Sao_Paulo",
+        forecast_days: "16",
+      });
+
+      const response = await fetch(
+        `https://api.open-meteo.com/v1/forecast?${params}&models=${model.id}`
+      );
+
+      if (!response.ok) continue;
+
+      const data = await response.json();
+
+      results.push({
+        model: model.id,
+        modelName: model.name,
+        color: model.color,
+        daily: {
+          time: data.daily.time,
+          precipitation_sum: data.daily.precipitation_sum,
+          temperature_2m_max: data.daily.temperature_2m_max,
+          temperature_2m_min: data.daily.temperature_2m_min,
+        },
+      });
+    } catch (error) {
+      console.error(`Erro ao buscar modelo ${model.name}:`, error);
+    }
+  }
+
+  return results;
+}
+
 // Obter datas para historico (ultimos N dias)
 export function getHistoricalDateRange(days: number = 7) {
   const end = new Date();
