@@ -32,7 +32,7 @@ import { TrendingUp, TrendingDown, Droplets } from "lucide-react";
 
 export default function HistoryPage() {
   const { location } = useLocation();
-  const { data, isLoading, isError } = useHistoricalWeather(location, 7);
+  const { data, isLoading, isError } = useHistoricalWeather(location, 30);
 
   const chartData = data?.map((day) => ({
     date: format(parseISO(day.date), "dd/MM", { locale: ptBR }),
@@ -61,7 +61,7 @@ export default function HistoryPage() {
       <div>
         <h1 className="text-2xl font-bold">Historico</h1>
         <p className="text-sm text-muted-foreground">
-          Dados dos ultimos 7 dias
+          Dados dos ultimos 30 dias
         </p>
       </div>
 
